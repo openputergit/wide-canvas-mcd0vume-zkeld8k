@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Components Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media (max-width: 640px) {
+            .graph-container {
+                height: 300px !important;
+            }
+            .table-container {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen">
+        <!-- Main Container -->
+        <div id="mainContainer" class="p-4 max-w-7xl mx-auto">
+            <!-- Components Screen -->
+            <div id="componentsScreen" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <button onclick="showScreen('mcrDetails')" class="p-6 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">MCR Block</button>
+                <button onclick="showScreen('acdbDetails')" class="p-6 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">ACDB</button>
+                <button onclick="showScreen('invertersDetails')" class="p-6 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">Inverters</button>
+                <button onclick="showScreen('dcChannelsDetails')" class="p-6 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">DC Channels</button>
+            </div>
+
+            <!-- Details Screens (Initially Hidden) -->
+            <div id="mcrDetails" class="hidden">
+                <div class="component-screen">
+                    <h1 class="text-2xl font-bold mb-4">MCR Details</h1>
+                    
+                    <!-- Search and Controls -->
+                    <div class="flex flex-wrap items-center gap-4 mb-4">
+                        <input type="text" placeholder="Search..." class="p-2 border rounded">
+                        <div class="flex items-center gap-2">
+                            <span>Meter Type:</span>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="meterType" value="HT" class="form-radio" checked>
+                                <span class="ml-2">HT</span>
+                            </label>
+                            <label class="inline-flex items-center ml-4">
+                                <input type="radio" name="meterType" value="LT" class="form-radio">
+                                <span class="ml-2">LT</span>
+                            </label>
+                        </div>
+                        <div class="relative">
+                            <button id="downloadBtn" class="p-2"><i class="bi bi-three-dots-vertical"></i></button>
+                            <div id="downloadMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                                <a href="#" class="block px-4 py-2 hover:bg-gray-100">Download CSV</a>
+                                <a href="#" class="block px-4 py-2 hover:bg-gray-100">Download Excel</a>
+                                <a href="#" class="block px-4 py-2 hover:bg-gray-100">Download JSON</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View Toggle -->
+                    <div class="mb-4">
+                        <button onclick="toggleView('graph')" class="bg-blue-500 text-white px-4 py-2 rounded mr-2">Graph View</button>
+                        <button onclick="toggleView('data')" class="bg-green-500 text-white px-4 py-2 rounded">Data View</button>
+                    </div>
+
+                    <!-- Graph View -->
+                    <div id="graphView">
+                        <div class="bg-white p-4 rounded-lg shadow mb-4">
+                            <canvas id="powerChart" class="graph-container" style="height: 400px;"></canvas>
+                        </div>
+                        <div class="mb-4">
+                            <select id="parameterSelect" class="p-2 border rounded">
+                                <option value="power">Power</option>
+                                <option value="voltage">Voltage</option>
+                                <option value="current">Current</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Data View -->
+                    <div id="dataView" class="hidden">
+                        <div class="table-container bg-white rounded-lg shadow overflow-hidden">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="p-3">Parameters</th>
+                                        <th class="p-3">Incomer Meter</th>
+                                        <th class="p-3">Outgoing Meter</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="p-3 border">VR (KV)</td>
+                                        <td class="p-3 border">220</td>
+                                        <td class="p-3 border">220</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 border">VY (KV)</td>
+                                        <td class="p-3 border">220</td>
+                                        <td class="p-3 border">220</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 border">VB (KV)</td>
+                                        <td class="p-3 border">220</td>
+                                        <td class="p-3 border">220</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 border">IR (A)</td>
+                                        <td class="p-3 border">100</td>
+                                        <td class="p-3 border">100</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 border">IY (A)</td>
+                                        <td class="p-3 border">100</td>
+                                        <td class="p-3 border">100</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 border">IB (A)</td>
+                                        <td class="p-3 border">100</td>
+                                        <td class="p-3 border">100</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Footer -->
+            <div class="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-2">
+                <div class="flex justify-around max-w-7xl mx-auto">
+                    <button onclick="showScreen('componentsScreen')" class="text-sm p-2 hover:text-blue-600">Components</button>
+                    <button onclick="showScreen('mcrDetails')" class="text-sm p-2 hover:text-blue-600">MCR</button>
+                    <button onclick="showScreen('acdbDetails')" class="text-sm p-2 hover:text-blue-600">ACDB</button>
+                    <button onclick="showScreen('invertersDetails')" class="text-sm p-2 hover:text-blue-600">Inverters</button>
+                    <button onclick="showScreen('dcChannelsDetails')" class="text-sm p-2 hover:text-blue-600">DC Channels</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Chart
+        const ctx = document.getElementById('powerChart').getContext('2d');
+        let powerChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00'],
+                datasets: [{
+                    label: 'Power',
+                    data: [65, 59, 80, 81, 56, 55],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Screen Navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('[id$="Details"], #componentsScreen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // View Toggle
+        function toggleView(view) {
+            const graphView = document.getElementById('graphView');
+            const dataView = document.getElementById('dataView');
+            
+            if (view === 'graph') {
+                graphView.classList.remove('hidden');
+                dataView.classList.add('hidden');
+            } else {
+                graphView.classList.add('hidden');
+                dataView.classList.remove('hidden');
+            }
+        }
+
+        // Download Menu Toggle
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            document.getElementById('downloadMenu').classList.toggle('hidden');
+        });
+
+        // Parameter Change Handler
+        document.getElementById('parameterSelect').addEventListener('change', function() {
+            const newData = {
+                power: [65, 59, 80, 81, 56, 55],
+                voltage: [220, 215, 225, 218, 222, 219],
+                current: [100, 95, 105, 98, 102, 97]
+            };
+
+            powerChart.data.datasets[0].label = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+            powerChart.data.datasets[0].data = newData[this.value];
+            powerChart.update();
+        });
+
+        // Close download menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const downloadMenu = document.getElementById('downloadMenu');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            if (!downloadBtn.contains(event.target) && !downloadMenu.contains(event.target)) {
+                downloadMenu.classList.add('hidden');
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
